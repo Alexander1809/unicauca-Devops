@@ -26,7 +26,23 @@ Resources:
         SigningBehavior: always
         SigningProtocol: sigv4
 
-    
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontAccess
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: "s3:GetObject"
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
+
   FrontendDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -46,26 +62,11 @@ Resources:
           ForwardedValues:
             QueryString: false
         ViewerCertificate:
+          
+          
           CloudFrontDefaultCertificate: true
-
-  BucketPolicy:
-      Type: AWS::S3::BucketPolicy
-      Properties:
-        Bucket: !Ref FrontendBucket
-        PolicyDocument:
-          Version: "2012-10-17"
-          Statement:
-            - Sid: AllowCloudFrontAccess
-              Effect: Allow
-              Principal:
-                Service: cloudfront.amazonaws.com
-              Action: "s3:GetObject"
-              Resource: !Sub "${FrontendBucket.Arn}/*"
-              Condition:
-                StringEquals:
-                  AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${FrontendDistribution}"
-
-  Outputs:
+  
+Outputs:
   FrontendURL:
     Description: "URL pública del frontend"
     Value: !Sub "https://${FrontendDistribution.DomainName}"
